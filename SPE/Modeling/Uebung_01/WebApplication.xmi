@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="ASCII"?>
+<swml:WebApplication xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:swml="swml" name="application1">
+  <entities name="Personal">
+    <attributes name="email" dataType="String"/>
+    <attributes name="sprechstunden" dataType="String"/>
+    <id name="name" dataType="String"/>
+  </entities>
+</swml:WebApplication>
