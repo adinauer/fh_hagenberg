@@ -1,0 +1,157 @@
+Coco-2 PGT (source: Experiments.atg)
+
+    1| COMPILER Experiments
+    2| 
+    3| SEM<<
+    4| 	private static int amount;
+    5| 	private static String name;
+    6| 	private static System.Collections.Generic.List<Experiment> experiments = new System.Collections.Generic.List<Experiment>();
+    7| >>
+    8| 
+    9| CHARACTER SETS
+   10| 	digit      = '0'..'9'.
+   11|     letter     = 'A' .. 'Z' + 'a' .. 'z' + 	'_' + '-' + 'ä' + 'ö' + 'ü' + 'Ä' + 'Ö' + 'Ü' + 'ß' .
+   12| 	whiteSpace = CHR(9) + EOL IGNORE. /*' ' ignored by default*/ 
+   13| 
+   14| TOKENS                      
+   15| 	':'.                    
+   16| 	';'.
+   17| 	','.
+   18| 	'.'.
+   19| 
+   20| TOKEN CLASSES
+   21| 	number<<out int num>> = digit { digit }
+   22| 		LEX<< num = Convert.ToInt32(tokenStr); >>.
+   23| 		  
+   24| 	identifier<<out string ident>> = letter  { letter | digit }
+   25| 		LEX << ident = tokenStr; >>.
+   26| 
+   27| NONTERMINALS
+   28| 	Experiments.
+   29| 	Experiment.
+   30| 	Ingredient<<ref Experiment exp>>.
+   31| 
+   32| RULES
+   33| 	Experiments = 
+   34| 		Experiment { ';' Experiment } '.' 
+   35| 		SEM<<
+   36| 			Console.WriteLine("Experiments: ");
+   37| 			foreach (Experiment e in experiments) {
+   38| 				Console.WriteLine(e);
+   39| 			}
+   40| 			
+   41| 			
+   42| 			ExperimentMetrics metrics = new ExperimentMetrics(experiments);
+   43| 			
+   44| 			Console.WriteLine("Number of Experiments: " + metrics.GetNumberOfExperiments());
+   45| 			
+   46| 			Console.WriteLine("Total Amount used per Ingredient:");
+   47| 			foreach (Ingredient ingredient in metrics.GetIngredientsTotalUsed()) {
+   48| 				Console.WriteLine("  " + ingredient);
+   49| 			}
+   50| 			
+   51| 			Console.WriteLine("Average Amount used per Ingredient:");
+   52| 			foreach (Ingredient ingredient in metrics.GetIngredientsAverageUsed()) {
+   53| 				Console.WriteLine("  " + ingredient);
+   54| 			}
+   55| 		>>
+   56| 	.
+   57| 	
+   58| 	Experiment =  
+   59| 		LOCAL<<
+   60| 			Experiment e = new Experiment();
+   61| 		>>
+   62| 		identifier<<out name>> ':' 
+   63| 		SEM<<
+   64| 			e.Name = name;
+   65| 			experiments.Add(e);
+   66| 		>>
+   67| 			Ingredient<<ref e>> { ',' Ingredient<<ref e>> }
+   68| 	.
+   69| 		
+   70| 	Ingredient<<ref Experiment exp>> =  
+   71| 		identifier<<out name>> number<<out amount>>
+   72| 		SEM<<
+   73| 			exp.AddIngredient(new Ingredient(name, amount));
+   74| 		>>
+   75| 	.
+   76| 
+   77| END Experiments.
+
+
+error(s) and warning(s):
+-----------------------
+
+    0 lexical error(s) 
+    0 syntax error(s)  
+    0 semantic error(s)
+    0 warning(s)       
+
+
+statistics:
+----------
+
+    6 terminals
+    3 nonterminals
+    5 alternatives
+   15 nodes in top-down graph
+    1 eps sets (with look ahead)
+    1 any sets
+
+   53 bytes G-code
+
+grammar has no deletable nonterminals
+-------------------------------------
+
+
+
+G-code:
+
+======
+
+-----  Experiments  ------------------------
+    1  NT     Experiment              1
+    4  TA     ';'                    14
+    8  NT     Experiment              2
+   11  JMP        4
+
+   14  T      '.'
+   16  SEM        3
+   17  RET
+
+-----  Experiment  -------------------------
+   18  TC     identifier              1
+   21  T      ':'
+   23  SEM        2
+   24  NT     Ingredient              3
+   27  TA     ','                    37
+   31  NT     Ingredient              4
+   34  JMP       27
+
+   37  EPS        1
+   39  RET
+
+-----  Ingredient  -------------------------
+   40  TC     identifier              1
+   43  TC     number                  2
+   46  SEM        3
+   47  RET
+
+-----  R o o t  ----------------------------
+   48  NT     Experiments             1
+   51  T      'end of file'
+   53  RET
+
+
+nonterminals:
+============
+
+Experiments               1     { identifier }
+Experiment               18     { identifier }
+Ingredient               40     { identifier }
+
+
+eps look-aheads:
+===============
+
+    1   { ';', '.' }

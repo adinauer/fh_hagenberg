@@ -1,0 +1,1 @@
+DNS-Extraktion: Salzsäure 250, Natronlauge 130, Schwefelsäure 600;Experiment_99: Kalilauge 50, Salzsäure 34, Dichlormethan 300;Vaterschaft: Natriumhydrogenkarbonatlösung 570, Schwefelsäure 600;Caipirinha: Cachaca 500, Limettensäure 20, Wasser_gefroren 100.

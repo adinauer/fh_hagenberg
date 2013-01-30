@@ -1,0 +1,285 @@
+Coco-2 PGT (source: GrammarTranslator.atg)
+
+    1| COMPILER GrammarTranslator
+    2| 
+    3| SEM<<
+    4| 	private static System.Collections.Generic.List<Rule> rules = new System.Collections.Generic.List<Rule>();
+    5| 	private static SymbolNameGenerator symbolNameGenerator = new SymbolNameGenerator();
+    6| >>
+    7| 
+    8| CHARACTER SETS
+    9| 	digit      = '0'..'9'.
+   10| 	upperCase  = 'A' .. 'Z'.
+   11| 	lowerCase  = 'a' .. 'z'.
+   12| 	letter     = upperCase + lowerCase.
+   13| 	whiteSpace = CHR(9) + EOL IGNORE. /*' ' ignored by default*/ 
+   14| 	noDoubleQuotes = ANY - '"'.
+   15| 	noSingleQuotes = ANY - "'".
+   16| 
+   17| TOKENS                      
+   18| 	'='.                    
+   19| 	'|'.
+   20| 	'['.
+   21| 	']'.
+   22| 	'{'.
+   23| 	'}'.
+   24| 	'('.
+   25| 	')'.
+   26| 	'.'.
+   27| 
+   28| TOKEN CLASSES
+   29| 	number<<out int num>> = digit { digit }
+   30| 		LEX<< num = Convert.ToInt32(tokenStr); >>.
+   31| 		  
+   32| 	nonterminal<<out string nonterminal>> = letter  { letter | digit }
+   33| 		LEX << nonterminal = tokenStr; >>.
+   34| 		
+   35| 	terminal<<out String terminal>> = '"' {noDoubleQuotes} '"' | "'" {noSingleQuotes} "'"
+   36| 		LEX<< terminal = tokenStr; >>.
+   37| 
+   38| NONTERMINALS
+   39| 	GrammarTranslator.
+   40| 	Rule.
+   41| 	Alternatives<<ref Rule rule>>.
+   42| 	Alternative<<ref Rule rule>>.
+   43| 	Grouping<<ref Rule rule>>.
+   44| 	Optional<<ref Rule rule>>.
+   45| 	Repetition<<ref Rule rule>>.
+   46| 
+   47| RULES
+   48| 	GrammarTranslator = 
+   49| 		{
+   50| 			Rule '.'
+   51| 		} 
+   52| 		SEM<<
+   53| 			Console.WriteLine("Rules:");
+   54| 			foreach (Rule r in rules) {
+   55| 				Console.WriteLine(r);
+   56| 			}
+   57| 		>>
+   58| 	.
+   59| 	
+   60| 	Rule = 
+   61| 		LOCAL<<
+   62| 			Rule rule = new Rule();
+   63| 			String nonterminal = "";
+   64| 		>>
+   65| 		nonterminal<<out nonterminal>> '=' 
+   66| 		SEM<<
+   67| 			rule.NonTerminal = nonterminal;
+   68| 		>>
+   69| 		Alternatives<<ref rule>> 
+   70| 		SEM<<
+   71| 			rules.Add(rule);
+   72| 		>>
+   73| 	.
+   74| 	
+   75| 	Alternatives<<ref Rule rule>> = Alternative<<ref rule>> { '|' Alternative<<ref rule>> } .
+   76| 	
+   77| 	Alternative<<ref Rule rule>> = 
+   78| 		LOCAL<<
+   79| 			String nonterminal = "";
+   80| 			String terminal = "";
+   81| 			
+   82| 			Alternative alternative = new Alternative();
+   83| 			
+   84| 			Rule groupRule = null;
+   85| 			Rule optionalRule = null;
+   86| 			Rule repetitionRule = null;
+   87| 		>>
+   88| 		SEM<<
+   89| 			rule.AddAlternative(alternative);
+   90| 		>>
+   91| 		{
+   92| 				nonterminal<<out nonterminal>> 
+   93| 				SEM<<
+   94| 					alternative.AddSymbol(new Symbol(nonterminal, Symbol.Kind.NONTERMINAL));
+   95| 				>>
+   96| 			|
+   97| 				terminal<<out terminal>> 
+   98| 				SEM<<
+   99| 					alternative.AddSymbol(new Symbol(terminal, Symbol.Kind.TERMINAL));
+  100| 				>>
+  101| 			| 
+  102| 				SEM<<
+  103| 					groupRule = new Rule();
+  104| 					groupRule.NonTerminal = symbolNameGenerator.Generate();
+  105| 					rules.Add(groupRule);
+  106| 					alternative.AddSymbol(new Symbol(groupRule.NonTerminal, Symbol.Kind.NONTERMINAL));
+  107| 				>>
+  108| 				Grouping<<ref groupRule>> 
+  109| 			| 
+  110| 				SEM<<
+  111| 					optionalRule = new Rule();
+  112| 					optionalRule.NonTerminal = symbolNameGenerator.Generate();
+  113| 					
+  114| 					// add empty alternative
+  115| 					optionalRule.AddAlternative(new Alternative());
+  116| 					
+  117| 					rules.Add(optionalRule);
+  118| 					alternative.AddSymbol(new Symbol(optionalRule.NonTerminal, Symbol.Kind.NONTERMINAL));
+  119| 				>>
+  120| 				Optional<<ref optionalRule>> 
+  121| 			| 
+  122| 				SEM<<
+  123| 					repetitionRule = new Rule();
+  124| 					repetitionRule.NonTerminal = symbolNameGenerator.Generate();
+  125| 					
+  126| 					rules.Add(repetitionRule);
+  127| 					alternative.AddSymbol(new Symbol(repetitionRule.NonTerminal, Symbol.Kind.NONTERMINAL));
+  128| 				>>
+  129| 				Repetition<<ref repetitionRule>> 
+  130| 				SEM<<
+  131| 					// add recursion to every alternative
+  132| 					foreach (Alternative a in repetitionRule.GetAlternatives()) {
+  133| 						a.AddSymbol(new Symbol(repetitionRule.NonTerminal, Symbol.Kind.NONTERMINAL));
+  134| 					}
+  135| 					
+  136| 					// add empty alternative
+  137| 					repetitionRule.AddAlternative(new Alternative());
+  138| 				>>
+  139| 		}
+  140| 	.
+  141| 	
+  142| 	Grouping<<ref Rule rule>> = '(' Alternatives<<ref rule>> ')' .
+  143| 	
+  144| 	Optional<<ref Rule rule>> = '[' Alternatives<<ref rule>> ']' .
+  145| 	
+  146| 	Repetition<<ref Rule rule>> = '{' Alternatives<<ref rule>> '}' .
+  147| 
+  148| END GrammarTranslator.
+
+
+error(s) and warning(s):
+-----------------------
+
+    0 lexical error(s) 
+    0 syntax error(s)  
+    0 semantic error(s)
+    0 warning(s)       
+
+
+statistics:
+----------
+
+   12 terminals
+    7 nonterminals
+   14 alternatives
+   33 nodes in top-down graph
+    6 eps sets (with look ahead)
+    1 any sets
+
+  127 bytes G-code
+
+deletable nonterminal(s):
+------------------------
+
+  GrammarTranslator
+  Alternatives
+  Alternative
+
+
+G-code:
+
+======
+
+-----  GrammarTranslator  ------------------
+    1  NTA    Rule                   11   11
+    6  T      '.'
+    8  JMP        1
+
+   11  EPS        1
+   13  SEM        2
+   14  RET
+
+-----  Rule  -------------------------------
+   15  TC     nonterminal             1
+   18  T      '='
+   20  SEM        2
+   21  NT     Alternatives            3
+   24  SEM        4
+   25  RET
+
+-----  Alternatives  -----------------------
+   26  NT     Alternative             1
+   29  TA     '|'                    39
+   33  NT     Alternative             2
+   36  JMP       29
+
+   39  EPS        2
+   41  RET
+
+-----  Alternative  ------------------------
+   42  SEM        1
+   43  TCA    nonterminal            52   52
+   48  SEM        3
+   49  JMP       43
+
+   52  TCA    terminal               61   61
+   57  SEM        5
+   58  JMP       43
+
+   61  EPSA       3          72
+   65  SEM        6
+   66  NT     Grouping                7
+   69  JMP       43
+
+   72  EPSA       4          83
+   76  SEM        8
+   77  NT     Optional                9
+   80  JMP       43
+
+   83  EPSA       5          95
+   87  SEM       10
+   88  NT     Repetition             11
+   91  SEM       12
+   92  JMP       43
+
+   95  EPS        6
+   97  RET
+
+-----  Grouping  ---------------------------
+   98  T      '('
+  100  NT     Alternatives            1
+  103  T      ')'
+  105  RET
+
+-----  Optional  ---------------------------
+  106  T      '['
+  108  NT     Alternatives            1
+  111  T      ']'
+  113  RET
+
+-----  Repetition  -------------------------
+  114  T      '{'
+  116  NT     Alternatives            1
+  119  T      '}'
+  121  RET
+
+-----  R o o t  ----------------------------
+  122  NT     GrammarTranslator       1
+  125  T      'end of file'
+  127  RET
+
+
+nonterminals:
+============
+
+GrammarTranslator         1 del { nonterminal }
+Rule                     15     { nonterminal }
+Alternatives             26 del { '|', '[', '{', '(', nonterminal, terminal }
+Alternative              42 del { '[', '{', '(', nonterminal, terminal }
+Grouping                 98     { '(' }
+Optional                106     { '[' }
+Repetition              114     { '{' }
+
+
+eps look-aheads:
+===============
+
+    1   { 'end of file' }
+    2   { ']', '}', ')', '.' }
+    3   { '(' }
+    4   { '[' }
+    5   { '{' }
+    6   { '|', ']', '}', ')', '.' }

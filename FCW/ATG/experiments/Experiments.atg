@@ -1,0 +1,77 @@
+COMPILER Experiments
+
+SEM<<
+	private static int amount;
+	private static String name;
+	private static System.Collections.Generic.List<Experiment> experiments = new System.Collections.Generic.List<Experiment>();
+>>
+
+CHARACTER SETS
+	digit      = '0'..'9'.
+    letter     = 'A' .. 'Z' + 'a' .. 'z' + 	'_' + '-' + 'ä' + 'ö' + 'ü' + 'Ä' + 'Ö' + 'Ü' + 'ß' .
+	whiteSpace = CHR(9) + EOL IGNORE. /*' ' ignored by default*/ 
+
+TOKENS                      
+	':'.                    
+	';'.
+	','.
+	'.'.
+
+TOKEN CLASSES
+	number<<out int num>> = digit { digit }
+		LEX<< num = Convert.ToInt32(tokenStr); >>.
+		  
+	identifier<<out string ident>> = letter  { letter | digit }
+		LEX << ident = tokenStr; >>.
+
+NONTERMINALS
+	Experiments.
+	Experiment.
+	Ingredient<<ref Experiment exp>>.
+
+RULES
+	Experiments = 
+		Experiment { ';' Experiment } '.' 
+		SEM<<
+			Console.WriteLine("Experiments: ");
+			foreach (Experiment e in experiments) {
+				Console.WriteLine(e);
+			}
+			
+			
+			ExperimentMetrics metrics = new ExperimentMetrics(experiments);
+			
+			Console.WriteLine("Number of Experiments: " + metrics.GetNumberOfExperiments());
+			
+			Console.WriteLine("Total Amount used per Ingredient:");
+			foreach (Ingredient ingredient in metrics.GetIngredientsTotalUsed()) {
+				Console.WriteLine("  " + ingredient);
+			}
+			
+			Console.WriteLine("Average Amount used per Ingredient:");
+			foreach (Ingredient ingredient in metrics.GetIngredientsAverageUsed()) {
+				Console.WriteLine("  " + ingredient);
+			}
+		>>
+	.
+	
+	Experiment =  
+		LOCAL<<
+			Experiment e = new Experiment();
+		>>
+		identifier<<out name>> ':' 
+		SEM<<
+			e.Name = name;
+			experiments.Add(e);
+		>>
+			Ingredient<<ref e>> { ',' Ingredient<<ref e>> }
+	.
+		
+	Ingredient<<ref Experiment exp>> =  
+		identifier<<out name>> number<<out amount>>
+		SEM<<
+			exp.AddIngredient(new Ingredient(name, amount));
+		>>
+	.
+
+END Experiments.

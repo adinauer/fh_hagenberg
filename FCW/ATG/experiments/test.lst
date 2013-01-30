@@ -1,0 +1,16 @@
+Experiments (file: "test.ex")
+
+    1| DNS-Extraktion: Salzsäure 250, Natronlauge 130, Schwefelsäure 600;
+    2| Experiment_99: Kalilauge 50, Salzsäure 34, Dichlormethan 300;
+    3| Vaterschaft: Natriumhydrogenkarbonatlösung 570, Schwefelsäure 600;
+    4| Caipirinha: Cachaca 500, Limettensäure 20, Wasser_gefroren 100.
++LEX+                                                                ^invalid token start
+
+
+error(s) and warning(s):
+-----------------------
+
+    1 lexical error(s) 
+    0 syntax error(s)  
+    0 semantic error(s)
+    0 warning(s)       

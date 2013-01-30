@@ -1,0 +1,56 @@
+COMPILER BinaryTree
+
+SEM<<
+	private static int num;
+	private static BTree tree;
+>>
+
+CHARACTER SETS
+	digit = '0'..'9'.
+	whiteSpace = CHR(9) + EOL IGNORE. /*' ' ignored by default*/ 
+
+TOKENS                      
+	'('.
+	')'.
+
+TOKEN CLASSES
+	number<<out int num>> = digit { digit }
+		LEX<< num = Convert.ToInt32(tokenStr); >>.
+
+NONTERMINALS
+	BinaryTree.
+	SubTree<<ref BTree t>>.
+
+RULES
+	BinaryTree = 
+		SEM<<
+			tree = new BTree();
+		>>
+		'(' SubTree<<ref tree>> ')'
+		SEM<<
+			Console.WriteLine("Tree:");
+			Console.Write("(");
+			if (tree.HasBeenAssigned()) {
+				Console.Write(tree);
+			}
+			Console.WriteLine(")");
+		>>
+		.
+		
+	SubTree<<ref BTree t>> = 
+		LOCAL<<
+			BTree left = new BTree();
+			BTree right = new BTree();
+		>>
+		[
+			'(' SubTree<<ref left>> ')' 
+				number<<out num>> 
+				SEM<<
+					t.Value = num;
+					t.Left = left;
+					t.Right = right;
+				>>
+			'(' SubTree<<ref right>> ')'
+		] .
+
+END BinaryTree.

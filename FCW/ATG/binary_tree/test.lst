@@ -1,0 +1,13 @@
+BinaryTree (file: "test.bt")
+
+    1| ( ( () 2 () ) 3 ( () 5 () ) )
+*SYN*    ^expected: "end of file"
+
+
+error(s) and warning(s):
+-----------------------
+
+    0 lexical error(s) 
+    1 syntax error(s)  
+    0 semantic error(s)
+    0 warning(s)       

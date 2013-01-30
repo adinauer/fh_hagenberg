@@ -1,0 +1,148 @@
+COMPILER GrammarTranslator
+
+SEM<<
+	private static System.Collections.Generic.List<Rule> rules = new System.Collections.Generic.List<Rule>();
+	private static SymbolNameGenerator symbolNameGenerator = new SymbolNameGenerator();
+>>
+
+CHARACTER SETS
+	digit      = '0'..'9'.
+	upperCase  = 'A' .. 'Z'.
+	lowerCase  = 'a' .. 'z'.
+	letter     = upperCase + lowerCase.
+	whiteSpace = CHR(9) + EOL IGNORE. /*' ' ignored by default*/ 
+	noDoubleQuotes = ANY - '"'.
+	noSingleQuotes = ANY - "'".
+
+TOKENS                      
+	'='.                    
+	'|'.
+	'['.
+	']'.
+	'{'.
+	'}'.
+	'('.
+	')'.
+	'.'.
+
+TOKEN CLASSES
+	number<<out int num>> = digit { digit }
+		LEX<< num = Convert.ToInt32(tokenStr); >>.
+		  
+	nonterminal<<out string nonterminal>> = letter  { letter | digit }
+		LEX << nonterminal = tokenStr; >>.
+		
+	terminal<<out String terminal>> = '"' {noDoubleQuotes} '"' | "'" {noSingleQuotes} "'"
+		LEX<< terminal = tokenStr; >>.
+
+NONTERMINALS
+	GrammarTranslator.
+	Rule.
+	Alternatives<<ref Rule rule>>.
+	Alternative<<ref Rule rule>>.
+	Grouping<<ref Rule rule>>.
+	Optional<<ref Rule rule>>.
+	Repetition<<ref Rule rule>>.
+
+RULES
+	GrammarTranslator = 
+		{
+			Rule '.'
+		} 
+		SEM<<
+			Console.WriteLine("Rules:");
+			foreach (Rule r in rules) {
+				Console.WriteLine(r);
+			}
+		>>
+	.
+	
+	Rule = 
+		LOCAL<<
+			Rule rule = new Rule();
+			String nonterminal = "";
+		>>
+		nonterminal<<out nonterminal>> '=' 
+		SEM<<
+			rule.NonTerminal = nonterminal;
+		>>
+		Alternatives<<ref rule>> 
+		SEM<<
+			rules.Add(rule);
+		>>
+	.
+	
+	Alternatives<<ref Rule rule>> = Alternative<<ref rule>> { '|' Alternative<<ref rule>> } .
+	
+	Alternative<<ref Rule rule>> = 
+		LOCAL<<
+			String nonterminal = "";
+			String terminal = "";
+			
+			Alternative alternative = new Alternative();
+			
+			Rule groupRule = null;
+			Rule optionalRule = null;
+			Rule repetitionRule = null;
+		>>
+		SEM<<
+			rule.AddAlternative(alternative);
+		>>
+		{
+				nonterminal<<out nonterminal>> 
+				SEM<<
+					alternative.AddSymbol(new Symbol(nonterminal, Symbol.Kind.NONTERMINAL));
+				>>
+			|
+				terminal<<out terminal>> 
+				SEM<<
+					alternative.AddSymbol(new Symbol(terminal, Symbol.Kind.TERMINAL));
+				>>
+			| 
+				SEM<<
+					groupRule = new Rule();
+					groupRule.NonTerminal = symbolNameGenerator.Generate();
+					rules.Add(groupRule);
+					alternative.AddSymbol(new Symbol(groupRule.NonTerminal, Symbol.Kind.NONTERMINAL));
+				>>
+				Grouping<<ref groupRule>> 
+			| 
+				SEM<<
+					optionalRule = new Rule();
+					optionalRule.NonTerminal = symbolNameGenerator.Generate();
+					
+					// add empty alternative
+					optionalRule.AddAlternative(new Alternative());
+					
+					rules.Add(optionalRule);
+					alternative.AddSymbol(new Symbol(optionalRule.NonTerminal, Symbol.Kind.NONTERMINAL));
+				>>
+				Optional<<ref optionalRule>> 
+			| 
+				SEM<<
+					repetitionRule = new Rule();
+					repetitionRule.NonTerminal = symbolNameGenerator.Generate();
+					
+					rules.Add(repetitionRule);
+					alternative.AddSymbol(new Symbol(repetitionRule.NonTerminal, Symbol.Kind.NONTERMINAL));
+				>>
+				Repetition<<ref repetitionRule>> 
+				SEM<<
+					// add recursion to every alternative
+					foreach (Alternative a in repetitionRule.GetAlternatives()) {
+						a.AddSymbol(new Symbol(repetitionRule.NonTerminal, Symbol.Kind.NONTERMINAL));
+					}
+					
+					// add empty alternative
+					repetitionRule.AddAlternative(new Alternative());
+				>>
+		}
+	.
+	
+	Grouping<<ref Rule rule>> = '(' Alternatives<<ref rule>> ')' .
+	
+	Optional<<ref Rule rule>> = '[' Alternatives<<ref rule>> ']' .
+	
+	Repetition<<ref Rule rule>> = '{' Alternatives<<ref rule>> '}' .
+
+END GrammarTranslator.

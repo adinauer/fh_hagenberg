@@ -1,0 +1,130 @@
+Coco-2 PGT (source: BinaryTree.atg)
+
+    1| COMPILER BinaryTree
+    2| 
+    3| SEM<<
+    4| 	private static int num;
+    5| 	private static BTree tree;
+    6| >>
+    7| 
+    8| CHARACTER SETS
+    9| 	digit = '0'..'9'.
+   10| 	whiteSpace = CHR(9) + EOL IGNORE. /*' ' ignored by default*/ 
+   11| 
+   12| TOKENS                      
+   13| 	'('.
+   14| 	')'.
+   15| 
+   16| TOKEN CLASSES
+   17| 	number<<out int num>> = digit { digit }
+   18| 		LEX<< num = Convert.ToInt32(tokenStr); >>.
+   19| 
+   20| NONTERMINALS
+   21| 	BinaryTree.
+   22| 	SubTree<<ref BTree t>>.
+   23| 
+   24| RULES
+   25| 	BinaryTree = 
+   26| 		SEM<<
+   27| 			tree = new BTree();
+   28| 		>>
+   29| 		'(' SubTree<<ref tree>> ')'
+   30| 		SEM<<
+   31| 			Console.WriteLine("Tree:");
+   32| 			Console.Write("(");
+   33| 			if (tree.HasBeenAssigned()) {
+   34| 				Console.Write(tree);
+   35| 			}
+   36| 			Console.WriteLine(")");
+   37| 		>>
+   38| 		.
+   39| 		
+   40| 	SubTree<<ref BTree t>> = 
+   41| 		LOCAL<<
+   42| 			BTree left = new BTree();
+   43| 			BTree right = new BTree();
+   44| 		>>
+   45| 		[
+   46| 			'(' SubTree<<ref left>> ')' 
+   47| 				number<<out num>> 
+   48| 				SEM<<
+   49| 					t.Value = num;
+   50| 					t.Left = left;
+   51| 					t.Right = right;
+   52| 				>>
+   53| 			'(' SubTree<<ref right>> ')'
+   54| 		] .
+   55| 
+   56| END BinaryTree.
+
+
+error(s) and warning(s):
+-----------------------
+
+    0 lexical error(s) 
+    0 syntax error(s)  
+    0 semantic error(s)
+    0 warning(s)       
+
+
+statistics:
+----------
+
+    3 terminals
+    2 nonterminals
+    3 alternatives
+   14 nodes in top-down graph
+    1 eps sets (with look ahead)
+    1 any sets
+
+   40 bytes G-code
+
+deletable nonterminal(s):
+------------------------
+
+  SubTree
+
+
+G-code:
+
+======
+
+-----  BinaryTree  -------------------------
+    1  SEM        1
+    2  T      '('
+    4  NT     SubTree                 2
+    7  T      ')'
+    9  SEM        3
+   10  RET
+
+-----  SubTree  ----------------------------
+   11  TA     '('                    32
+   15  NT     SubTree                 1
+   18  T      ')'
+   20  TC     number                  2
+   23  SEM        3
+   24  T      '('
+   26  NT     SubTree                 4
+   29  T      ')'
+   31  RET
+
+   32  EPS        1
+   34  RET
+
+-----  R o o t  ----------------------------
+   35  NT     BinaryTree              1
+   38  T      'end of file'
+   40  RET
+
+
+nonterminals:
+============
+
+BinaryTree                1     { '(' }
+SubTree                  11 del { '(' }
+
+
+eps look-aheads:
+===============
+
+    1   { ')' }
